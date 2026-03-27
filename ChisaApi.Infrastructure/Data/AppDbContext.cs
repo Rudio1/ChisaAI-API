@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using ChisaApi.Domain.Common;
-using ChisaApi.Domain.Expenses;
 using ChisaApi.Domain.Users;
 using ChisaApi.Domain.Users.Entities;
 using ChisaApi.Domain.Expenses.Entities;
@@ -16,6 +15,7 @@ public sealed class AppDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
     public DbSet<Expense> Expenses => Set<Expense>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -54,17 +54,35 @@ public sealed class AppDbContext : DbContext
             e.Property(x => x.UpdatedAt).IsRequired();
         });
 
+        modelBuilder.Entity<ExpenseCategory>(e =>
+        {
+            e.ToTable("ExpenseCategories");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.CreatedAt).IsRequired();
+            e.Property(x => x.UpdatedAt).IsRequired();
+            e.HasIndex(x => new { x.UserId, x.DeletedAt });
+            e.HasIndex(x => new { x.UserId, x.Name })
+                .IsUnique()
+                .HasFilter("[DeletedAt] IS NULL");
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<Expense>(e =>
         {
             e.ToTable("Expenses");
             e.HasKey(x => x.Id);
             e.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
-            e.Property(x => x.Category).HasMaxLength(200).IsRequired();
             e.Property(x => x.Note).HasMaxLength(2000);
             e.Property(x => x.SpentAt).IsRequired();
             e.Property(x => x.CreatedAt).IsRequired();
             e.Property(x => x.UpdatedAt).IsRequired();
             e.HasIndex(x => new { x.UserId, x.DeletedAt });
+            e.HasIndex(x => x.CategoryId);
+            e.HasOne(x => x.Category)
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
             e.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }

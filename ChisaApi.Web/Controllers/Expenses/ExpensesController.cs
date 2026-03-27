@@ -20,14 +20,23 @@ public class ExpensesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<ExpenseDto>>> List(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<ExpenseDto>>> List(
+        [FromQuery] ListExpensesQueryParameters query,
+        CancellationToken cancellationToken)
     {
         Guid? userId = HttpContext.GetUserId();
         if (userId is null)
             return Unauthorized();
 
-        IReadOnlyList<ExpenseDto> list = await _expenses.ListAsync(userId.Value, cancellationToken).ConfigureAwait(false);
-        return Ok(list);
+        try
+        {
+            IReadOnlyList<ExpenseDto> list = await _expenses.ListAsync(userId.Value, query, cancellationToken).ConfigureAwait(false);
+            return Ok(list);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("{id:guid}")]

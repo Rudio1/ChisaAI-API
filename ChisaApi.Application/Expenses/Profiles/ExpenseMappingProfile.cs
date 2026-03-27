@@ -9,24 +9,25 @@ public sealed class ExpenseMappingProfile : Profile
 {
     public ExpenseMappingProfile()
     {
-        CreateMap<Expense, ExpenseDto>();
+        CreateMap<Expense, ExpenseDto>()
+            .ForMember(d => d.CategoryName, o => o.MapFrom(s => s.Category != null ? s.Category.Name : ""));
 
         CreateMap<CreateExpenseDto, Expense>()
             .ForMember(d => d.Id, o => o.Ignore())
             .ForMember(d => d.UserId, o => o.Ignore())
+            .ForMember(d => d.Category, o => o.Ignore())
             .ForMember(d => d.CreatedAt, o => o.Ignore())
             .ForMember(d => d.UpdatedAt, o => o.Ignore())
             .ForMember(d => d.DeletedAt, o => o.Ignore())
-            .ForMember(d => d.Category, o => o.MapFrom(s => s.Category.Trim()))
             .ForMember(d => d.Note, o => o.MapFrom(s => string.IsNullOrWhiteSpace(s.Note) ? null : s.Note!.Trim()));
 
         CreateMap<UpdateExpenseDto, Expense>()
             .ForMember(d => d.Id, o => o.Ignore())
             .ForMember(d => d.UserId, o => o.Ignore())
+            .ForMember(d => d.Category, o => o.Ignore())
             .ForMember(d => d.CreatedAt, o => o.Ignore())
             .ForMember(d => d.UpdatedAt, o => o.Ignore())
             .ForMember(d => d.DeletedAt, o => o.Ignore())
-            .ForMember(d => d.Category, o => o.MapFrom(s => s.Category.Trim()))
             .ForMember(d => d.Note, o => o.MapFrom(s => string.IsNullOrWhiteSpace(s.Note) ? null : s.Note!.Trim()));
     }
 }

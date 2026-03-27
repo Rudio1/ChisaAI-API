@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ChisaApi.Application.Auth;
+using ChisaApi.Application.ExpenseCategories;
 using ChisaApi.Application.Expenses;
 using ChisaApi.Application.Expenses.Profiles;
 using ChisaApi.Domain.Expenses.ServiceDomain;
@@ -15,9 +16,11 @@ public static class DependencyInjection
         services.Configure<AuthSettings>(configuration.GetSection(AuthSettings.SectionName));
         services.AddAutoMapper(typeof(ExpenseMappingProfile).Assembly);
         services.AddScoped<ExpenseDomainService>();
+        services.AddScoped<ExpenseCategoryDomainService>();
         services.AddScoped<UserRegistrationDomainService>();
         services.AddScoped<AuthAppService>();
         services.AddScoped<ExpenseAppService>();
+        services.AddScoped<ExpenseCategoryAppService>();
         return services;
     }
 }

@@ -20,14 +20,53 @@ public sealed class ExpenseRepository : IExpenseRepository
     }
 
     public Task<Expense?> GetByIdForUserAsync(Guid expenseId, Guid userId, CancellationToken cancellationToken = default) =>
-        _context.Expenses.FirstOrDefaultAsync(
-            x => x.Id == expenseId && x.UserId == userId && x.DeletedAt == null,
-            cancellationToken);
+        _context.Expenses
+            .Include(x => x.Category)
+            .FirstOrDefaultAsync(
+                x => x.Id == expenseId && x.UserId == userId && x.DeletedAt == null,
+                cancellationToken);
 
-    public async Task<IReadOnlyList<Expense>> ListByUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Expense>> ListByUserAsync(
+        Guid userId,
+        DateOnly? startDate,
+        DateOnly? endDate,
+        Guid? categoryId,
+        CancellationToken cancellationToken = default)
     {
-        List<Expense> list = await _context.Expenses.AsNoTracking()
-            .Where(x => x.UserId == userId && x.DeletedAt == null)
+        IQueryable<Expense> query = _context.Expenses.AsNoTracking()
+            .Include(x => x.Category)
+            .Where(x => x.UserId == userId && x.DeletedAt == null);
+
+        if (categoryId.HasValue)
+            query = query.Where(x => x.CategoryId == categoryId.Value);
+
+        if (startDate.HasValue)
+        {
+            DateTimeOffset start = new(
+                startDate.Value.Year,
+                startDate.Value.Month,
+                startDate.Value.Day,
+                0,
+                0,
+                0,
+                TimeSpan.Zero);
+            query = query.Where(x => x.SpentAt >= start);
+        }
+
+        if (endDate.HasValue)
+        {
+            DateTimeOffset endExclusive = new DateTimeOffset(
+                endDate.Value.Year,
+                endDate.Value.Month,
+                endDate.Value.Day,
+                0,
+                0,
+                0,
+                TimeSpan.Zero).AddDays(1);
+            query = query.Where(x => x.SpentAt < endExclusive);
+        }
+
+        List<Expense> list = await query
             .OrderByDescending(x => x.SpentAt)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
