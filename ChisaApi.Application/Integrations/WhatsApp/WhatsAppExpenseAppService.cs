@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using ChisaApi.Application.Abstractions;
 using ChisaApi.Application.ExpenseCategories.DataTransfers.Requests;
 using ChisaApi.Application.ExpenseCategories.DataTransfers.Responses;
@@ -99,7 +100,7 @@ public sealed class WhatsAppExpenseAppService
                 pendingTracked,
                 messageText,
                 cancellationToken).ConfigureAwait(false),
-            WhatsAppPendingStep.AwaitingOtherCategoryName => await HandleOtherCategoryNameAsync(
+            WhatsAppPendingStep.AwaitingCategoryListPick => await HandleCategoryListPickAsync(
                 user.Id,
                 phone,
                 pendingTracked,
@@ -232,26 +233,62 @@ public sealed class WhatsAppExpenseAppService
             }
         }
 
-        pending.Step = WhatsAppPendingStep.AwaitingOtherCategoryName;
+        IReadOnlyList<ExpenseCategory> categories = await _categoryRepository
+            .ListByUserAsync(userId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (categories.Count == 0)
+        {
+            return new WhatsAppInboundFlowResponse
+            {
+                Outcome = "awaiting_choice",
+                WhatsAppReplyText =
+                    "Você ainda não tem nenhuma categoria cadastrada no app.\n\n"
+                    + $"Valor: {FormatMoney(pending.Amount)}\n"
+                    + $"Categoria desejada: *{pending.CategoryNameUnderReview.ToUpperInvariant()}*\n\n"
+                    + "Responda:\n"
+                    + "1 - Sim, criar essa categoria e registrar o gasto\n"
+                    + "2 - Não, cancelar"
+            };
+        }
+
+        pending.Step = WhatsAppPendingStep.AwaitingCategoryListPick;
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return new WhatsAppInboundFlowResponse
         {
-            Outcome = "awaiting_other_category",
-            WhatsAppReplyText =
-                "Digite o *nome exato* de uma categoria que você já cadastrou no app (ex.: Almoço, Transporte)."
+            Outcome = "awaiting_category_pick",
+            WhatsAppReplyText = BuildNumberedCategoryList(pending.Amount, categories)
         };
     }
 
-    private async Task<WhatsAppInboundFlowResponse> HandleOtherCategoryNameAsync(
+    private static string BuildNumberedCategoryList(decimal amount, IReadOnlyList<ExpenseCategory> categories)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"Valor do gasto: {FormatMoney(amount)}");
+        sb.AppendLine();
+        sb.AppendLine("Escolha a categoria pelo *número*:");
+        for (int i = 0; i < categories.Count; i++)
+            sb.AppendLine($"{i + 1} - {categories[i].Name}");
+        sb.AppendLine();
+        sb.AppendLine("Envie *0* para cancelar.");
+        return sb.ToString().TrimEnd();
+    }
+
+    private async Task<WhatsAppInboundFlowResponse> HandleCategoryListPickAsync(
         Guid userId,
         string phoneE164,
         WhatsAppPendingConversation pending,
         string messageText,
         CancellationToken cancellationToken)
     {
+        IReadOnlyList<ExpenseCategory> categories = await _categoryRepository
+            .ListByUserAsync(userId, cancellationToken)
+            .ConfigureAwait(false);
+
         string trimmed = messageText.Trim();
-        if (trimmed is "2")
+        if (trimmed.Equals("cancelar", StringComparison.OrdinalIgnoreCase)
+            || trimmed == "0")
         {
             await _pending.DeleteAsync(pending.Id, cancellationToken).ConfigureAwait(false);
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -262,41 +299,25 @@ public sealed class WhatsAppExpenseAppService
             };
         }
 
-        string normalizedName = _categoryDomain.NormalizeName(trimmed);
-        try
-        {
-            _categoryDomain.ValidateName(normalizedName);
-        }
-        catch (ArgumentException ex)
+        if (!int.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out int pick)
+            || pick < 1
+            || pick > categories.Count)
         {
             return new WhatsAppInboundFlowResponse
             {
-                Outcome = "awaiting_other_category",
-                WhatsAppReplyText = $"{ex.Message}\n\nOu envie *2* para cancelar."
+                Outcome = "awaiting_category_pick",
+                WhatsAppReplyText =
+                    $"Número inválido. Envie um de *1* a *{categories.Count}*, ou *0* para cancelar.\n\n"
+                    + BuildNumberedCategoryList(pending.Amount, categories)
             };
         }
 
-        ExpenseCategory? existing = await _categoryRepository
-            .FindActiveByNameForUserAsync(userId, normalizedName, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (existing is not null)
-        {
-            await _pending.DeleteAsync(pending.Id, cancellationToken).ConfigureAwait(false);
-            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return await CreateExpenseAndReplyAsync(userId, pending.Amount, existing.Id, note: null, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        pending.CategoryNameUnderReview = normalizedName;
-        pending.Step = WhatsAppPendingStep.AwaitingMenuChoice;
+        ExpenseCategory chosen = categories[pick - 1];
+        await _pending.DeleteAsync(pending.Id, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return new WhatsAppInboundFlowResponse
-        {
-            Outcome = "awaiting_choice",
-            WhatsAppReplyText = BuildCategoryMissingMenu(pending.Amount, normalizedName)
-        };
+        return await CreateExpenseAndReplyAsync(userId, pending.Amount, chosen.Id, note: null, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private async Task<WhatsAppInboundFlowResponse> CreateExpenseAndReplyAsync(
@@ -316,7 +337,7 @@ public sealed class WhatsAppExpenseAppService
                 Outcome = "expense_created",
                 Expense = expense,
                 WhatsAppReplyText =
-                    $"{FormatMoney(amount)} REAIS\nCATEGORIA {catName.ToUpperInvariant()}\n\nGasto salvo no Chisa."
+                    $"Gasto *{FormatMoney(amount)}* registrado para a categoria *{catName}*."
             };
         }
         catch (ArgumentException ex)
