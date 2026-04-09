@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ChisaApi.Application.Auth;
-using ChisaApi.Application.Auth.DataTransfer.Requests;
-using ChisaApi.Application.Auth.DataTransfer.Responses;
+using ChisaApi.Application.Authentications.DataTransfers.Requests;
+using ChisaApi.Application.Authentications.DataTransfers.Responses;
+using ChisaApi.Application.Authentications.Services;
 
 namespace ChisaApi.Web.Controllers.Auth;
 

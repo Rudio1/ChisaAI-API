@@ -1,6 +1,6 @@
-using ChisaApi.Application.ExpenseCategories;
-using ChisaApi.Application.ExpenseCategories.DataTransfer.Requests;
-using ChisaApi.Application.ExpenseCategories.DataTransfer.Responses;
+using ChisaApi.Application.ExpenseCategories.DataTransfers.Requests;
+using ChisaApi.Application.ExpenseCategories.DataTransfers.Responses;
+using ChisaApi.Application.ExpenseCategories.Services;
 using ChisaApi.Web.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

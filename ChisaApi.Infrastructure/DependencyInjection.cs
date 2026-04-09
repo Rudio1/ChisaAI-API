@@ -1,5 +1,6 @@
 using ChisaApi.Application.Abstractions;
-using ChisaApi.Application.Auth;
+using ChisaApi.Application.Authentications.Services.Interfaces;
+using ChisaApi.Application.Authentications.Settings;
 using ChisaApi.Domain.Expenses.Interfaces;
 using ChisaApi.Domain.Users;
 using ChisaApi.Domain.Users.Entities;

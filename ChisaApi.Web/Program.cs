@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ChisaApi.Application;
-using ChisaApi.Application.Auth;
+using ChisaApi.Application.Authentications.Settings;
 using ChisaApi.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);

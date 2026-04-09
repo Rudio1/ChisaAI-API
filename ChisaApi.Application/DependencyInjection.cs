@@ -1,9 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ChisaApi.Application.Auth;
-using ChisaApi.Application.ExpenseCategories;
-using ChisaApi.Application.Expenses;
+using ChisaApi.Application.Authentications.Services;
+using ChisaApi.Application.Authentications.Settings;
+using ChisaApi.Application.ExpenseCategories.Services;
 using ChisaApi.Application.Expenses.Profiles;
+using ChisaApi.Application.Expenses.Services;
 using ChisaApi.Domain.Expenses.ServiceDomain;
 using ChisaApi.Domain.Users.ServiceDomain;
 

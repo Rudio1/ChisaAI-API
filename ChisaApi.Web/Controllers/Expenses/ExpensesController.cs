@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ChisaApi.Application.Expenses;
-using ChisaApi.Application.Expenses.DataTransfer.Requests;
-using ChisaApi.Application.Expenses.DataTransfer.Responses;
+using ChisaApi.Application.Expenses.DataTransfers.Requests;
+using ChisaApi.Application.Expenses.DataTransfers.Responses;
+using ChisaApi.Application.Expenses.Services;
 using ChisaApi.Web.Http;
 
 namespace ChisaApi.Web.Controllers.Expenses;

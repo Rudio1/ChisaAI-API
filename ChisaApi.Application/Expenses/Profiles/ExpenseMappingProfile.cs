@@ -1,6 +1,6 @@
 using AutoMapper;
-using ChisaApi.Application.Expenses.DataTransfer.Requests;
-using ChisaApi.Application.Expenses.DataTransfer.Responses;
+using ChisaApi.Application.Expenses.DataTransfers.Requests;
+using ChisaApi.Application.Expenses.DataTransfers.Responses;
 using ChisaApi.Domain.Expenses.Entities;
 
 namespace ChisaApi.Application.Expenses.Profiles;

@@ -3,7 +3,8 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using ChisaApi.Application.Auth;
+using ChisaApi.Application.Authentications.Services.Interfaces;
+using ChisaApi.Application.Authentications.Settings;
 
 namespace ChisaApi.Infrastructure.Auth;
 
