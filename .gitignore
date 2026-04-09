@@ -1,5 +1,7 @@
 bin/
 obj/
+
+ChisaApi.Infrastructure/Migrations/
 .vs/
 *.user
 *.suo

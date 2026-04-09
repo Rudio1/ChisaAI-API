@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ChisaApi.Application.Authentications.Services;
 using ChisaApi.Application.Authentications.Settings;
 using ChisaApi.Application.ExpenseCategories.Services;
+using ChisaApi.Application.Integrations.WhatsApp;
 using ChisaApi.Application.Expenses.Profiles;
 using ChisaApi.Application.Expenses.Services;
 using ChisaApi.Domain.Expenses.ServiceDomain;
@@ -22,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<AuthAppService>();
         services.AddScoped<ExpenseAppService>();
         services.AddScoped<ExpenseCategoryAppService>();
+        services.AddScoped<WhatsAppExpenseAppService>();
         return services;
     }
 }

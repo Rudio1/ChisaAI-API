@@ -4,6 +4,7 @@ using ChisaApi.Domain.Common;
 using ChisaApi.Domain.Users;
 using ChisaApi.Domain.Users.Entities;
 using ChisaApi.Domain.Expenses.Entities;
+using ChisaApi.Domain.WhatsApp.Entities;
 
 namespace ChisaApi.Infrastructure.Data;
 
@@ -17,6 +18,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
     public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<WhatsAppPendingConversation> WhatsAppPendingConversations => Set<WhatsAppPendingConversation>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -83,6 +85,20 @@ public sealed class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<WhatsAppPendingConversation>(e =>
+        {
+            e.ToTable("WhatsAppPendingConversations");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.PhoneE164).HasMaxLength(24).IsRequired();
+            e.Property(x => x.Step).HasConversion<int>().IsRequired();
+            e.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.CategoryNameUnderReview).HasMaxLength(200).IsRequired();
+            e.Property(x => x.CreatedAt).IsRequired();
+            e.Property(x => x.ExpiresAt).IsRequired();
+            e.HasIndex(x => new { x.PhoneE164, x.ExpiresAt });
             e.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }

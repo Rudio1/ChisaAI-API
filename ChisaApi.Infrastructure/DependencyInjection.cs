@@ -2,12 +2,14 @@ using ChisaApi.Application.Abstractions;
 using ChisaApi.Application.Authentications.Services.Interfaces;
 using ChisaApi.Application.Authentications.Settings;
 using ChisaApi.Domain.Expenses.Interfaces;
+using ChisaApi.Domain.WhatsApp;
 using ChisaApi.Domain.Users;
 using ChisaApi.Domain.Users.Entities;
 using ChisaApi.Infrastructure.Auth;
 using ChisaApi.Infrastructure.Data;
 using ChisaApi.Infrastructure.Expenses.Repositories;
 using ChisaApi.Infrastructure.Users.Repositories;
+using ChisaApi.Infrastructure.WhatsApp;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -20,7 +22,6 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
-
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
@@ -30,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.AddScoped<IExpenseCategoryRepository, ExpenseCategoryRepository>();
+        services.AddScoped<IWhatsAppPendingConversationRepository, WhatsAppPendingConversationRepository>();
 
         return services;
     }

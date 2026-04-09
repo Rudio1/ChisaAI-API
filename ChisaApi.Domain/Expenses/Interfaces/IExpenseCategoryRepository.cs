@@ -11,4 +11,9 @@ public interface IExpenseCategoryRepository
     Task<ExpenseCategory?> GetByIdForUserAsync(Guid categoryId, Guid userId, CancellationToken cancellationToken = default);
     Task<ExpenseCategory?> GetTrackedByIdForUserAsync(Guid categoryId, Guid userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ExpenseCategory>> ListByUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<ExpenseCategory?> FindActiveByNameForUserAsync(
+        Guid userId,
+        string name,
+        CancellationToken cancellationToken = default);
 }

@@ -60,4 +60,14 @@ public sealed class ExpenseCategoryRepository : IExpenseCategoryRepository
             .ConfigureAwait(false);
         return list;
     }
+
+    public Task<ExpenseCategory?> FindActiveByNameForUserAsync(
+        Guid userId,
+        string name,
+        CancellationToken cancellationToken = default) =>
+        _context.ExpenseCategories.AsNoTracking().FirstOrDefaultAsync(
+            x => x.UserId == userId
+                && x.DeletedAt == null
+                && x.Name.ToLower() == name.ToLower(),
+            cancellationToken);
 }

@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ChisaApi.Application;
 using ChisaApi.Application.Authentications.Settings;
+using ChisaApi.Application.Integrations.Settings;
 using ChisaApi.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,8 @@ JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.Configure<WhatsAppIntegrationOptions>(
+    builder.Configuration.GetSection(WhatsAppIntegrationOptions.SectionName));
 
 JwtSettings jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
     ?? throw new InvalidOperationException($"Secção {JwtSettings.SectionName} em falta ou inválida.");
